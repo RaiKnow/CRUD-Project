@@ -10,7 +10,7 @@ namespace CRUD_Test
 
         public CountryServiceTest()
         {
-            _countriesService = new CountriesService();
+            _countriesService = new CountriesService(false);
         }
 
         #region Add Country
