@@ -1,4 +1,7 @@
 ﻿using Entities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using ServiceContracts;
 using ServiceContracts.DTO;
 
@@ -6,44 +9,14 @@ namespace Services
 {
     public class CountriesService : ICountriesService
     {
-        private readonly List<Country> _countries;
+        private readonly PersonsDbContext _db;
 
-        public CountriesService(bool initialize = true)
+        public CountriesService(PersonsDbContext personsDbContext)
         {
-            _countries = new List<Country>();
-
-            if (initialize)
-            {
-                _countries.AddRange(new List<Country>() {
-                new Country()
-                {
-                    CountryID = Guid.Parse("0C5B9025-A178-422F-9772-B83CF42F3FBA"), CountryName = "USA"
-                },
-
-                new Country()
-                {
-                    CountryID = Guid.Parse("206418E0-F767-4689-BAC9-B0AA7696E60A"), CountryName = "Canada"
-                },
-                
-                new Country()
-                {
-                    CountryID = Guid.Parse("B7D4A259-C1DF-42A1-B9CB-1D833D1580A3"), CountryName = "UK"
-                },
-
-                new Country()
-                {
-                    CountryID = Guid.Parse("F7F1E057-CC8D-4C34-B03F-32387397DAA2"), CountryName = "India"
-                },
-
-                new Country()
-                {
-                    CountryID = Guid.Parse("148FECC0-F5AA-43A1-9744-1DA4289C7A5A"), CountryName = "Australia"
-                },
-                });
-            }
+            _db = personsDbContext;
         }
 
-        public CountryResponse AddCountry(CountryAddRequest? countryAddRequest)
+        public async Task<CountryResponse> AddCountry(CountryAddRequest? countryAddRequest)
         {
             if (countryAddRequest == null)
                 throw new ArgumentNullException(nameof(countryAddRequest));
@@ -51,33 +24,72 @@ namespace Services
             if (string.IsNullOrEmpty(countryAddRequest.CountryName))
                 throw new ArgumentException(nameof(countryAddRequest.CountryName));
 
-            if (_countries.Where(temp => temp.CountryName == countryAddRequest.CountryName).Count() > 0)
+            if (await _db.Countries.CountAsync(temp => temp.CountryName == countryAddRequest.CountryName) > 0)
                 throw new ArgumentException("Given country name is already exists");
 
             Country country = countryAddRequest.ToCountry();
 
             country.CountryID = Guid.NewGuid();
-            _countries.Add(country);
+            await _db.Countries.AddAsync(country);
+            await _db.SaveChangesAsync();
 
             return country.ToCountryResponse();
         }
 
-        public List<CountryResponse> GetAllCountries()
+        public async Task<List<CountryResponse>> GetAllCountries()
         {
-            return _countries.Select(country => country.ToCountryResponse()).ToList();
+            return _db.Countries.Select(country => country.ToCountryResponse()).ToList();
         }
 
-        public CountryResponse GetCountryByCountryID(Guid? CountryID)
+        public async Task<CountryResponse> GetCountryByCountryID(Guid? CountryID)
         {
             if (CountryID == null)
                 return null;
 
-            Country? country = _countries.FirstOrDefault(temp => temp.CountryID == CountryID);
+            Country? country = await _db.Countries.FirstOrDefaultAsync(temp => temp.CountryID == CountryID);
 
             if (country == null)
                 return null;
 
             return country.ToCountryResponse();
+        }
+
+        public async Task<int> UploadCountriesFromExcel(IFormFile formFile)
+        {
+            MemoryStream memoryStream = new MemoryStream();
+
+            await formFile.CopyToAsync(memoryStream);
+
+            int countriesInserted = 0;
+
+            using (ExcelPackage excelPackage = new ExcelPackage(memoryStream))
+            {
+                ExcelWorksheet workSheet = excelPackage.Workbook.Worksheets["Countries"];
+
+                int rowCount = workSheet.Dimension.Rows;
+                
+                for (int row = 2; row <= rowCount; row++)
+                {
+                    string? cellValue = Convert.ToString(workSheet.Cells[row, 1].Value);
+
+                    if (!string.IsNullOrEmpty(cellValue))
+                    {
+                        string? countryName = cellValue;
+
+                        if (_db.Countries.Where(temp => temp.CountryName == countryName).Count() == 0)
+                        {
+                            Country country = new Country() { CountryName = countryName };
+                            _db.Countries.Add(country);
+                            await _db.SaveChangesAsync();
+
+                            countriesInserted++;
+                        }
+
+                    }
+
+                }
+            }
+            return countriesInserted;
         }
     }
 }
