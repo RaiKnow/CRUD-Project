@@ -6,9 +6,6 @@
 <form asp-controller="Persons" asp-action="Index" method="get">
     <h1>Persons</h1>
     <a asp-controller="Persons" asp-action="Create">Create Person</a>
-    <a asp-controller="Persons" asp-action="PersonsPDF" class="ml">Download as PDF</a>
-    <a asp-controller="Persons" asp-action="PersonsCSV" class="ml">Download as CSV</a>
-    <a asp-controller="Persons" asp-action="PersonsExcel" class="ml">Download as Excel</a>
     <div class="box flex">
         <div class="flex-1">
             <select class="form-input" name="searchBy">
@@ -76,11 +73,11 @@
             @foreach (var person in Model)
             {
                 <tr>
-                    <td style="width:15%">@person.PersonName</td>
-                    <td style="width:17%">@person.Email</td>
-                    <td style="width:12%">@person.DateOfBirth?.ToString("dd MMM yyyy")</td>
-                    <td style="width:7%">@person.Age</td>
-                    <td style="width:9%">@person.Gender</td>
+                    <td style="width:12%">@person.PersonName</td>
+                    <td style="width:16%">@person.Email</td>
+                    <td style="width:10%">@person.DateOfBirth?.ToString("dd MMM yyyy")</td>
+                    <td style="width:5%">@person.Age</td>
+                    <td style="width:7%">@person.Gender</td>
                     <td style="width:10%">@person.Country</td>
                     <td style="width:10%">@person.Address</td>
                     <td style="width:12%">@person.ReceiveNewsLetters</td>

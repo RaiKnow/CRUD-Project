@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using ServiceContracts.DTO;
+﻿using ServiceContracts.DTO;
 
 namespace ServiceContracts
 {
@@ -13,26 +12,19 @@ namespace ServiceContracts
         /// </summary>
         /// <param name="countryAddRequest">Country object to add</param>
         /// <returns>Returns the country object after adding it(including newly generated country id</returns>
-        Task<CountryResponse> AddCountry(CountryAddRequest? countryAddRequest);
+        CountryResponse AddCountry(CountryAddRequest? countryAddRequest);
 
         /// <summary>
         /// Returns all the countries from the list
         /// </summary>
         /// <returns>All countries from the list as list of CountryResponse</returns>
-        Task<List<CountryResponse>> GetAllCountries();
+        List<CountryResponse> GetAllCountries();
 
         /// <summary>
         /// Returns a country object based on the given country id
         /// </summary>
         /// <param name="CountryID">CountryID (guid) to search</param>
         /// <returns>Matching country as CountryResponse object</returns>
-        Task<CountryResponse> GetCountryByCountryID(Guid? CountryID);
-
-        /// <summary>
-        /// Uploads countries from excel file into database
-        /// </summary>
-        /// <param name="formFile">Excel file</param>
-        /// <returns>Returns number of countries added</returns>
-        Task<int> UploadCountriesFromExcel(IFormFile formFile);
+        CountryResponse GetCountryByCountryID(Guid? CountryID);
     }
 }
