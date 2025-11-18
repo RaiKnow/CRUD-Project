@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace Entities
 {
-    public class PersonsDbContext : DbContext
+    public class ApplicationDbContext : DbContext
     {
-        public PersonsDbContext(DbContextOptions options) : base(options)
+        public ApplicationDbContext(DbContextOptions options) : base(options)
         {
         }
 
-        public DbSet<Country>? Countries { get; set; }
-        public DbSet<Person>? Persons { get; set; }
+        public virtual DbSet<Country>? Countries { get; set; }
+        public virtual DbSet<Person>? Persons { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -41,6 +41,14 @@ namespace Entities
             {
                 modelBuilder.Entity<Person>().HasData(person);
             }
+
+            //Fluent API
+            modelBuilder.Entity<Person>().Property(temp => temp.TIN)
+                .HasColumnName("TaxIdentificationNumber")
+                .HasColumnType("varchar(8)")
+                .HasDefaultValue("ABC12345");
+
+            modelBuilder.Entity<Person>().ToTable(temp => temp.HasCheckConstraint("CHK_TIN", "len([TaxIdentificationNumber])=8"));
         }
 
         public List<Person> sp_GetAllPersons()
